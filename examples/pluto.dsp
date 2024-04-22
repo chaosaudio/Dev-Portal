@@ -1,3 +1,5 @@
+// Example FAUST code
+
 import("stdfaust.lib");
 
 level = (vslider("level", 0.5, 0, 10, 0.01):si.smooth(0.993))*0.2;
