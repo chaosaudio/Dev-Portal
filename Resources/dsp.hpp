@@ -18,8 +18,6 @@
 typedef unsigned int Uint;
 #endif
 
-//int fSampleRate = 44100; //Change this to extend from Bela sample rate
-
 struct dsp {
 	enum SWITCH_STATE{
 		UP = 0,
@@ -29,8 +27,8 @@ struct dsp {
     private:
 
 	protected:
-	//	fSampleRate = 44100;
 		std::string version;
+    
     public:
 		int fSampleRate = 44100;
 		float knobs[MAXKNOBS];
@@ -72,7 +70,6 @@ struct dsp {
 		return name;
 	}
 	
-	//still need to make sure this is callable from Bela code
 	std::string getVersion(){
 		return version;
 	}
@@ -93,15 +90,6 @@ struct dsp {
 		return switches[in];
 	}
 
-
-	/* bool switchVal should be this enum
-	
-	enum STOMP_STATE{
-		UP = 0,
-		DOWN = 1,
-		MIDDLEE = 2
-	}
-	*/
 	virtual void setStompSwitch(SWITCH_STATE switchVal){
 		stompSwitch=switchVal;
 	}
