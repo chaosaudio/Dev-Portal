@@ -57,6 +57,10 @@ The following items are also necessary for every effect to be listed on Tone Sho
     
     This is the name of your effect.
     
+- **Effect price**
+    
+    This is the list price for your effect. If you're interested in charging for your effect, please let us know by emailing support@chaosaudio.com.
+    
 - **Effect subtitle**
     
     This is a 2-3 word description for your effect.
