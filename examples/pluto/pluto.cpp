@@ -1,4 +1,4 @@
-/* ------------------------------------------------------------
+ /* ------------------------------------------------------------
 name: "pluto"
 Code generated with Faust 2.37.3 (https://faust.grame.fr)
 Compilation options: -lang cpp -es 1 -single -ftz 0
@@ -85,7 +85,7 @@ class pluto : public dsp {
  public:
 	
 	
- virtual void instanceConstants() {
+    void instanceConstants() {
 		knobs[0] = 5.0;
 		version = "0.1.1";
 		knobs[1] = 5.0;
@@ -99,7 +99,7 @@ class pluto : public dsp {
 		fConst0 = (0.0166666675f / std::min<float>(192000.0f, std::max<float>(1.0f, float(fSampleRate))));
 	}
 	
-	virtual void instanceClear() {
+	void instanceClear() {
 		for (int l0 = 0; (l0 < 2); l0 = (l0 + 1)) {
 			fRec0[l0] = 0.0f;
 		}
@@ -121,7 +121,7 @@ class pluto : public dsp {
 		}
 	}
 
-	virtual void compute(int count, FAUSTFLOAT* input0, FAUSTFLOAT* output0) {
+	void compute(int count, FAUSTFLOAT* input0, FAUSTFLOAT* output0) {
 		float fSlow0 = (0.00700000022f * float(knobs[1]));
 		float fSlow1 = (0.00700000022f * float(knobs[0]));
 		float fSlow2 = (0.00700000022f * float(knobs[2]));

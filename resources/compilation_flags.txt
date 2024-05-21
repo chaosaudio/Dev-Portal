@@ -1,0 +1,1 @@
+g++ -fPIC -shared -O3 -g -march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -ftree-vectorize -ffast-math -fprefetch-loop-arrays -funroll-loops -funsafe-loop-optimizations -fno-finite-math-only "Effect Name".cpp -o "Effect ID".so
