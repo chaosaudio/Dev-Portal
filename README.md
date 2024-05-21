@@ -27,7 +27,7 @@ class example_effect : public dsp {
 }
 ```
 
-*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!
+*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!*
 
 ## Compilation
 
@@ -47,7 +47,7 @@ ssh root@stratus.local
 
 Please reach out to us via the [Developer Application](https://chaosaudio.com/pages/developer-portal) on our website, or via email at support@chaosaudio.com, to obtain the root user password.
 
-*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit in "Embedded" mode, this can be disregarded. The binary file will be built for you and installed into the proper directory! However, you will still need to reach out to us to obtain the root user password.
+*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit in "Embedded" mode, this can be disregarded. The binary file will be built for you and installed into the proper directory! However, you will still need to reach out to us to obtain the root user password.*
 
 ## Testing
 
@@ -66,7 +66,7 @@ Place your binary inside the directory:
 ```
 
 This will allow you to use the "9 KNOB" tester effect in the app to test your algorithm. 
-NOTE: Do not click "install" in the app or it will overwrite your own algorithm with an unrelated one!
+*NOTE: Do not click "install" in the app or it will overwrite your own algorithm with an unrelated one!*
  
 ## Public Release to Tone Shop™
 
