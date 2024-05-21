@@ -9,7 +9,7 @@ Everything you need to get started on developing effects for Stratus® and Tone 
 
 ## Resources
 
-[FAUST](https://faust.grame.fr/) - A useful DSP programming language. When using FAUST to generate C++ code, it will already follow the general format necessary for Stratus.
+[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development.
 
 [faust-stratus](https://github.com/bassmanitram/faust-stratus) - A toolkit that simplifies the use of Faust in designing algorithms to be used for Chaos Stratus pedal effects, created by Martin Bartlett. *HIGHLY recommended!*
 
