@@ -9,11 +9,11 @@ Everything you need to get started on developing effects for Stratus® and Tone 
 
 ## Resources
 
-[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development.
+[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development, and which has integrated support for the Stratus pedal!
 
-[faust-stratus](https://github.com/bassmanitram/faust-stratus) - A toolkit that simplifies the use of Faust in designing algorithms to be used for Chaos Stratus pedal effects, created by Martin Bartlett. *HIGHLY recommended!*
+[Online FAUST IDE](https://faustide.grame.fr/) - A web-based IDE for developing and testing Faust-based algorithms. Great for testing effects prior to actually loading them on Stratus. AND it has intergated support for the Stratus pedal!
 
-[Online FAUST IDE](https://faustide.grame.fr/) - A web-based IDE for developing and testing Faust-based algorithms. Great for testing effects prior to actually loading them on Stratus.
+[Our own turotrial](https://github.com/chaosaudio/Dev-Portal/wiki/Faust-and-the-Stratus-%E2%80%90-a-basic-tutorial) explaining how to use Faust and the Faust IDE to develop _and install_ Stratus effects!
 
 ## Usage
 
@@ -27,7 +27,7 @@ class example_effect : public dsp {
 }
 ```
 
-*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!*
+*NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!*
 
 ## Compilation
 
@@ -47,7 +47,7 @@ ssh root@stratus.local
 
 Please reach out to us via the [Developer Application](https://chaosaudio.com/pages/developer-portal) on our website, or via email at support@chaosaudio.com, to obtain the root user password.
 
-*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit in "Embedded" mode, this can be disregarded. The binary file will be built for you and installed into the proper directory! However, you will still need to reach out to us to obtain the root user password.*
+*NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The binary file will be built for you and installed into the proper directory! However, you will still need to reach out to us to obtain the root user password.*
 
 ## Testing
 
