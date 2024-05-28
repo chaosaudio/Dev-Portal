@@ -47,7 +47,7 @@ ssh root@stratus.local
 
 Please reach out to us via the [Developer Application](https://chaosaudio.com/pages/developer-portal) on our website, or via email at support@chaosaudio.com, to obtain the root user password.
 
-*NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The binary file will be built for you and installed into the proper directory! However, you will still need to reach out to us to obtain the root user password.*
+*NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The binary file will be built and installed into the proper directory when you execute the appropriate Faust tooling! However, you will still need to reach out to us to obtain the root user password.*
 
 ## Testing
 
