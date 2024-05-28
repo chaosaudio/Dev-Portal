@@ -9,11 +9,11 @@ Everything you need to get started on developing effects for Stratus® and Tone 
 
 ## Resources
 
-[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development.
+[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development, and which has integrated support for the Stratus pedal!
 
-[faust-stratus](https://github.com/bassmanitram/faust-stratus) - A toolkit that simplifies the use of Faust in designing algorithms to be used for Chaos Stratus pedal effects, created by Martin Bartlett. *HIGHLY recommended!*
+[Online FAUST IDE](https://faustide.grame.fr/) - A web-based IDE for developing and testing Faust-based algorithms. Great for testing effects prior to actually loading them on Stratus. AND it has intergated support for the Stratus pedal!
 
-[Online FAUST IDE](https://faustide.grame.fr/) - A web-based IDE for developing and testing Faust-based algorithms. Great for testing effects prior to actually loading them on Stratus.
+[Our own turotrial](https://github.com/chaosaudio/Dev-Portal/wiki/Faust-and-the-Stratus-%E2%80%90-a-basic-tutorial) explaining how to use Faust and the Faust IDE to develop _and install_ Stratus effects!
 
 ## Usage
 
@@ -27,7 +27,7 @@ class example_effect : public dsp {
 }
 ```
 
-*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!*
+*NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!*
 
 ## Compilation
 
@@ -47,27 +47,36 @@ ssh root@stratus.local
 
 Please reach out to us via the [Developer Application](https://chaosaudio.com/pages/developer-portal) on our website, or via email at support@chaosaudio.com, to obtain the root user password.
 
-*NOTE: When using the [faust-stratus](https://github.com/bassmanitram/faust-stratus) toolkit in "Embedded" mode, this can be disregarded. The binary file will be built for you and installed into the proper directory! However, you will still need to reach out to us to obtain the root user password.*
+*NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The binary file will be built and installed into the proper directory when you execute the appropriate Faust tooling! However, you will still need to reach out to us to obtain the root user password.*
 
 ## Testing
 
-To test your effect, you'll need the "Beta" version of the Chaos Audio mobile app. You can access the Beta version of the app by joining the Chaos Audio [Beta Program](https://chaosaudio.com/pages/beta-program).
+To test your effect on the pedal, you'll need the "Beta" version of the Chaos Audio mobile app. You can access the Beta version of the app by joining the Chaos Audio [Beta Program](https://chaosaudio.com/pages/beta-program).
  
 In the Beta version of the app, under the "Development" category, you'll find an effect titled "9 KNOB". This effect includes 9 different parameters for testing your own algorithm, all of which have a range of 0 to 10 and a step size of 0.1. You must ensure that your algorithm parameters are mapped to these ranges in order to use the tester effect.
- 
-Rename your compiled binary to:
-```bash
-55631e3a-94f7-42f8-8204-f5c6c11c4a21.so
-```
 
-Place your binary inside the directory:
-```bash
-/opt/update/sftp/firmware/effects
-```
+If you are NOT using the integrated Faust features, you must follow these steps:
+
+* Rename your compiled binary to:
+  ```bash
+  55631e3a-94f7-42f8-8204-f5c6c11c4a21.so
+  ```
+
+* Place your binary inside the directory:
+  ```bash
+  /opt/update/sftp/firmware/effects
+  ```
 
 This will allow you to use the "9 KNOB" tester effect in the app to test your algorithm. 
 *NOTE: Do not click "install" in the app or it will overwrite your own algorithm with an unrelated one!*
- 
+
+Again, the integrated support for the Stratus found in Faust and the Faust IDE will perform these steps for you.
+
+You can _also_ test your effect _away_ from the pedal:
+
+* Use Faust to build your effect on your *local* computer (i.e. NOT for the pedal)
+* Use the [Chaos Stratus Python wrapper](https://pypi.org/project/chaos-stratus/) to allow you to load the effect into a Python script, interact with the effect's knobs and switches, apply the effect algorithm to raw digital signal data, and listen to the results.
+
 ## Public Release to Tone Shop™
 
 The following items are necessary for every effect to be listed on Tone Shop™:
