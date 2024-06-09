@@ -4,16 +4,25 @@ Everything you need to get started on developing effects for Stratus® and Tone 
 
 ## Required Hardware
 
-- [Stratus](https://chaosaudio.com/products/stratus) multi-effects pedal
+- [Stratus®](https://chaosaudio.com/products/stratus) multi-effects pedal
 
 
 ## Resources
 
-[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development, and which has integrated support for the Stratus pedal!
+[FAUST](https://faust.grame.fr/) - A useful DSP programming language, which we officially recommend for any effects development, and which has integrated support for the Stratus® pedal!
 
-[Online FAUST IDE](https://faustide.grame.fr/) - A web-based IDE for developing and testing Faust-based algorithms. Great for testing effects prior to actually loading them on Stratus. AND it has intergated support for the Stratus pedal!
+[Online FAUST IDE](https://faustide.grame.fr/) - A web-based IDE for developing and testing Faust-based algorithms. Great for testing effects prior to actually loading them on Stratus®. AND it has intergated support for the Stratus® pedal!
 
-[Our own turotrial](https://github.com/chaosaudio/Dev-Portal/wiki/Faust-and-the-Stratus-%E2%80%90-a-basic-tutorial) explaining how to use Faust and the Faust IDE to develop _and install_ Stratus effects!
+[JUCE](https://juce.com/) - JUCE is a widely used framework for audio application and plug-in development. It is an open source C++ codebase that can be used to create standalone software on Stratus®, Windows, macOS, Linux, iOS, and Android, as well as VST, VST3, AU, AUv3, AAX and LV2 plug-ins.
+
+[Our own FAUST tutorial](https://github.com/chaosaudio/Dev-Portal/wiki/Faust-and-the-Stratus-%E2%80%90-a-basic-tutorial) explaining how to use Faust and the Faust IDE to develop _and install_ Stratus® effects!
+
+## FAUST vs JUCE (or both)
+
+If you're planning on developing effects for Stratus® and Tone Shop™ using JUCE libraries, please see the `juce_effect` example here:
+[JUCE Example](https://github.com/chaosaudio/Dev-Portal/tree/main/examples/juce_effect)
+
+If you're planning on using FAUST to develop your effects, continue on through this README!
 
 ## Usage
 
