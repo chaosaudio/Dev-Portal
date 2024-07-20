@@ -1,0 +1,12 @@
+[submodule "modules/RTNeural"]
+	path = modules/RTNeural
+	url = https://github.com/MaxPayne86/RTNeural.git
+[submodule "modules/FFTConvolver"]
+	path = modules/FFTConvolver
+	url = https://github.com/falkTX/FFTConvolver.git
+[submodule "modules/r8brain"]
+	path = modules/r8brain
+	url = https://github.com/avaneev/r8brain-free-src.git
+[submodule "modules/dr_libs"]
+	path = modules/dr_libs
+	url = https://github.com/mackron/dr_libs.git
