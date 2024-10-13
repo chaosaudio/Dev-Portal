@@ -38,7 +38,46 @@ class example_effect : public dsp {
 
 *NOTE: When using the integrated Faust and Faust IDE support for the Stratus, this can be disregarded. The C++ code will be generated for you from Faust and be in the correct format out-of-the-box!*
 
-## Compilation
+## Compilation with Docker
+
+* Be sure to update the submodules after cloning this repo:
+
+```bash
+git submodule update --init --recursive
+```
+
+* Now, to build & test new plugins:
+
+```bash
+docker buildx create --name mybuilder
+docker buildx use mybuilder
+docker run -it --rm --privileged tonistiigi/binfmt --install all # Install all qemu emulators
+docker buildx build --platform linux/arm -t chaos-audio-builder --load .
+docker run --rm -it -u $UID --platform linux/arm -v "$(pwd):/workdir" chaos-audio-builder # Cross-compilation x86_64 to arm/v7
+```
+
+* When build is finished, you can run benchmark util in the same container, just like this:
+
+```bash
+docker run --rm -it -u $UID --platform linux/arm -v "$(pwd):/workdir" --entrypoint bash chaos-audio-builder
+cd bins
+./tests/benchmark/benchmark-plugin /workdir/bins/equalizer.so 2 44100
+Loading library: /workdir/bins/equalizer.so
+Version: 2.0.0
+Loading symbol: create
+Creating instance
+Setting sample rate: 44100
+Invoking instanceConstants method
+Invoking benchmark method
+Starting benchmark
+Generating input signal
+Computing 2 seconds of data @44100Hz
+Processed 2 seconds of signal in 0.038303 seconds
+52.214863 x real-time
+Deleting instance
+```
+
+## Compilation on Stratus
 
 SSH into Stratus, copy your files to Stratus' local filesystem, and build your algorithm with the following command:
 
@@ -78,6 +117,11 @@ If you are NOT using the integrated Faust features, you must follow these steps:
 
 This will allow you to use the "9 KNOB" tester effect in the app to test your algorithm. 
 *NOTE: Do not click "install" in the app or it will overwrite your own algorithm with an unrelated one!*
+
+* To see a log of what's happening on the pedal, run the following command on Stratus:
+```bash
+journalctl -f -u bela_startup.service
+```
 
 Again, the integrated support for the Stratus found in Faust and the Faust IDE will perform these steps for you.
 
