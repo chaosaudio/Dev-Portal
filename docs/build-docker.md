@@ -220,7 +220,7 @@ aida-x-convolver  equalizer.so  pluto.so  spectrometer.so  tests
 - `bins/tests/benchmark/benchmark-plugin` — a host-side load-and-run harness for your `.so`. Run it **inside the container**, since it's an ARM binary; [verification.md](verification.md) covers this, including why QEMU timing numbers are meaningless and how to get real CPU numbers on the device.
 - `bins/aida-x-convolver/` — the featured convolver effect.
 
-These are 32-bit ARM binaries: they will not run on your host OS, only in the container or on a Stratus/Nimbus. To put one on hardware you rename it to `<EFFECT-ID>.so` and copy it over — that whole flow is [deploy-to-hardware.md](deploy-to-hardware.md). (`<EFFECT-ID>` is the GUID the firmware loads the effect by; deploy doc explains where it comes from.)
+These are 32-bit ARM binaries: they will not run on your host OS, only in the container or on a Stratus/Nimbus. To put one on hardware you upload it to the FX Builder (<https://build.chaosaudio.com>) and publish privately — that whole flow is [deploy-to-hardware.md](deploy-to-hardware.md). (The platform assigns your effect's GUID and hosts the binary as `<EFFECT-ID>.so`, the name the firmware loads it by.)
 
 **Checkpoint:** `file bins/equalizer.so` (on Linux/WSL2/macOS with `file` installed) reports `ELF 32-bit LSB shared object, ARM`.
 

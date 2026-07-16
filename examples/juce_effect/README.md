@@ -59,11 +59,11 @@ On Mac/Linux:
 docker run --rm -it --user $UID --platform linux/arm/v7 --volume "$(pwd):/workdir" stratus-builder
 ```
 
-Your effect will be in a "juce_effect/build_stratus/effect/" folder. You can copy it to Stratus now.
+Your effect will be in a "juce_effect/build_stratus/effect/" folder. You can now upload it to the FX Builder and publish privately to run it on your Stratus (see "Trying out your effect" below).
 
 ## 🖥️ How to cross-compile it on a PC
 
-The idea is to use a beefy x86-64 machine to produce an .so file that you can just copy to Stratus later.
+The idea is to use a beefy x86-64 machine to produce an .so file that you can then upload to the FX Builder.
 
 1. Get a Linux distro running or your PC. You can just make a virtual machine if you're not on Linux. Using Debian is recommended, but other distros can work as well. As long as those Linux libraries that your builds requires exist on Stratus. This example was tested on Debian Bullseye on a Ryzen7 PC in a VirtualBox VM.
 
@@ -86,7 +86,7 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=StratusLinuxPcTooclhain.cmake
 cmake --build .
 ```
 
-Your effect will be in a "juce_effect/build_stratus/effect/" folder. You can copy it to Stratus now.
+Your effect will be in a "juce_effect/build_stratus/effect/" folder. You can now upload it to the FX Builder and publish privately to run it on your Stratus (see "Trying out your effect" below).
 
 ## 🎛️ How to build it on Stratus
 
@@ -121,7 +121,7 @@ Things you might want to change:
 
 * Your effect version, see ```EFFECT_VERSION``` macro.
 
-* Your effect GUID, see ```EFFECT_GUID``` macro. You can use GUID of one of the pedal templates while you're starting out, than create your own entry in Chaos Audio's online tool and use the GUID that was assigned for your effect.
+* Your effect GUID, see ```EFFECT_GUID``` macro. Create your effect in the [FX Builder](https://build.chaosaudio.com) and use the Effect ID it assigns — the platform assigns every effect's ID, so you never invent one yourself.
 
 * Included JUCE modules. Find a piece that looks like this:
 
@@ -156,14 +156,10 @@ There are a few optional GCC flags you can add or drop, also you can change opti
 
 ## 🎸 Trying out your effect
 
-1. Get Templates -> 1KNOB effect in dev app's Tone Shop
+1. Create an effect in the [FX Builder](https://build.chaosaudio.com) and upload your .so file. It must be a 32-bit ARM shared object under 5 MB.
 
-2. Connect to Stratus via SFTP
+2. Give it a quick UI in the UI Builder, then publish privately. Private publish is instant (no review), and the effect appears only in your own account's library in the Chaos Audio app.
 
-3. Copy your .so file to /opt/update/sftp/firmware/effects directory. Doing so can crash its firmware, so if the LEDs start blinking, you can manually re-launch it:
+3. Install the effect on your Stratus from the app and add it to your pedalboard. Enjoy!
 
-``` bash
-cd /opt/update/sftp/firmware/ && ./fw
-```
-
-4. Add the 1KNOB effect to your pedalboard. Enjoy!
+To iterate, upload a new binary in the FX Builder and re-publish.

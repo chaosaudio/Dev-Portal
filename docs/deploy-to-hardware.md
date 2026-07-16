@@ -1,19 +1,58 @@
-# Deploy to Hardware
+# Test on Hardware
 
-This page shows you how to copy a compiled effect (`.so`) onto a **Stratus** pedal or **Nimbus** smart amp over SSH, load it with the Beta app's "9 KNOB" tester, watch the firmware logs to confirm it loaded, and iterate quickly. It assumes you already have a built `.so` — if you don't, do [Build with Docker](build-docker.md) first. The procedure is identical on Stratus and Nimbus: same firmware, same paths, same commands.
+This page shows you how to run a compiled effect (`.so`) on a **Stratus** pedal or **Nimbus** smart amp: upload the binary to the [FX Builder](https://build.chaosaudio.com), give it a quick UI, **publish privately**, and install it from the Chaos Audio app like any other effect. It also covers watching the firmware logs over SSH to confirm the load and catch errors. It assumes you already have a built `.so` — if you don't, do [Build with Docker](build-docker.md) first. The procedure is identical on Stratus and Nimbus: same firmware, same platform, same app.
 
 This is the *developer testing* path. Releasing your effect to users goes through the Tone Shop — see [Release & Submission](release-and-submission.md).
+
+> **Gotcha:** if you wrote your effect in FAUST, you don't need this page to hear it — the FX Builder can **audition FAUST effects in the browser** (built-in audio test with knobs) before you ever touch hardware. In-browser audition applies to FAUST/code drafts only; uploaded prebuilt binaries are auditioned on hardware via private publish, as below.
 
 ## Prerequisites
 
 - A compiled effect binary from the [Docker build](build-docker.md) (in `./bins/` after a build).
-- The Chaos Audio **Beta app** on your phone — join the [Beta Program](https://chaosaudio.com/pages/beta-program) to get it.
-- Your device powered on and connected to your computer with a USB **data** cable (Stratus and Nimbus have no Wi-Fi — SSH runs over the USB link).
-- The developer password for your device (issued with the developer program — apply via the [Developer Application](https://chaosaudio.com/pages/developer-portal), or ask in the developer Discord / support@chaosaudio.com if you don't have it). This documentation never prints device passwords.
+- A free **Chaos Audio account** at [build.chaosaudio.com](https://build.chaosaudio.com) — it's the same account as the mobile app. Sign up in the FX Builder, or use "Reset Password" if you already have an app account.
+- The **Chaos Audio app** on your phone, signed into the same account.
+- Your device powered on and paired with the app.
+- *Only for the optional log-watching section:* a USB **data** cable and the developer SSH password for your device (ask in the developer Discord / support@chaosaudio.com if you don't have it). This documentation never prints device passwords.
 
-## Step 1 — Find your device
+## Step 1 — Upload your binary to the FX Builder
 
-Stratus and Nimbus have **no Wi-Fi** and never join your network. Instead, when you connect the device to your computer with a **USB cable**, it presents a small "USB gadget network" over the cable — a private, two-machine network that exists only between your computer and the device. That link is how all `ssh`/`scp` in these docs work.
+Sign in at [build.chaosaudio.com](https://build.chaosaudio.com), create a new effect, and upload your `.so` (e.g. `./bins/subspace.so` from the Docker build). The upload must be a **32-bit ARM shared object under 5 MB** — anything the provided container produces qualifies.
+
+You never pick an effect ID. The platform assigns your effect's **Effect ID (GUID)** when the effect is created, and names the hosted binary `<EFFECT-ID>.so` itself — see [Release & Submission](release-and-submission.md).
+
+> **Warning:** the upload check is only "32-bit ARM shared object under 5 MB" — the platform does **not** validate your exports, ABI, or CPU cost, and shows a default CPU estimate for uploaded binaries. A binary that uploads fine can still fail to load or blow the audio deadline on hardware. The [Verification](verification.md) checklist remains your safety net; the log-watching section below is how you see the failure.
+
+**Checkpoint:** the FX Builder accepts your upload and shows the binary attached to your effect.
+
+## Step 2 — Give it a quick UI in the UI Builder
+
+Your effect needs a UI before it can be published. In the **UI Builder**, add your knobs, switches, and LED over a background; knobs and switches accept classic rotating/two-state assets or film strips of 2–128 frames, and the store images can be auto-generated. For a test build, minimal is fine — polish it later for release (see [Release & Submission](release-and-submission.md) for asset requirements).
+
+Keep your knob handling designed around the platform's 0–10 range (5 = noon is the platform convention — see [DSP Contract](dsp-contract.md)). Knob values arrive raw and unclamped; validate them in your effect regardless.
+
+## Step 3 — Publish privately
+
+Publish the effect **privately**. Private publish is instant — no review — and the effect appears **only in your own account's library** in the Chaos Audio app. Nobody else can see or install it.
+
+**Checkpoint:** the effect shows up in your library in the Chaos Audio app.
+
+## Step 4 — Install and play
+
+Install the effect on your Stratus or Nimbus from the app like any other effect, add it to a preset, select the preset, and you are hearing *your* code with live knobs.
+
+**Checkpoint:** engaging your effect in the app audibly runs your DSP; turning the app knobs changes it.
+
+## Iterating
+
+The edit–test cycle is: rebuild, upload the new binary to the same effect in the FX Builder (or edit your FAUST there), re-publish privately, and update the effect from the app. No cables, no file management — the platform and the app handle delivery to the device.
+
+## Watching the firmware logs (optional, advanced)
+
+Once an effect is installed via private publish, it lives on-device as `<EFFECT-ID>.so` under `/opt/update/sftp/firmware/effects/`, with its real platform-assigned ID — no manual file placement, ever. SSH access lets you watch the firmware load it (or fail to), which is invaluable when an uploaded binary misbehaves, and it is how you measure real CPU cost per [Verification](verification.md).
+
+### Find your device
+
+Stratus and Nimbus have **no Wi-Fi** and never join your network. Instead, when you connect the device to your computer with a **USB cable**, it presents a small "USB gadget network" over the cable — a private, two-machine network that exists only between your computer and the device. That link is how all `ssh` in these docs works.
 
 Plug the device into your computer over USB (data-capable cable), give it ~30 seconds after power-on, then try the mDNS hostname:
 
@@ -37,7 +76,7 @@ PING stratus.local (192.168.1.42): 56 data bytes
 
 **Checkpoint:** `ping` gets replies from the device (or you have its IP address written down).
 
-## Step 2 — First SSH login
+### First SSH login
 
 Connect as `root`:
 
@@ -70,91 +109,21 @@ root@stratus.local's password:
 > ssh-keygen -R stratus.local
 > ```
 
-Optional, but worth 5 seconds per iteration: install your SSH public key so you stop typing the password:
+Optional, but worth 5 seconds per session: install your SSH public key so you stop typing the password:
 
 ```bash
 ssh-copy-id root@stratus.local
 ```
 
-## Step 3 — Copy your effect to the device
+### Read the logs
 
-Effects live in one directory on the device, and the firmware loads them strictly by filename: a file named `<EFFECT-ID>.so` is loaded when a preset references that effect ID. Before copying, verify the device has comfortable free space — this directory sits on the same partition the firmware updater and preset writer use, so filling it breaks more than your next `scp`:
-
-```bash
-ssh root@stratus.local 'df -h /opt/update'
-```
-
-Periodically delete every stray GUID-shaped test file *you* created in earlier sessions, not only today's — and never anything else in the directory.
-
-Now copy your binary there with `scp`, renaming it in the same step:
-
-```bash
-scp <YOUR-EFFECT>.so root@stratus.local:/opt/update/sftp/firmware/effects/<EFFECT-ID>.so
-```
-
-- `<YOUR-EFFECT>.so` — the binary you built, e.g. `./bins/subspace.so` from the Docker build.
-- `<EFFECT-ID>` — the effect's ID (a GUID). For local testing you can use any GUID-shaped name, but for the app-based testing flow below use the **9 KNOB tester ID**: `55631e3a-94f7-42f8-8204-f5c6c11c4a21`. The real production ID is assigned by the Tone Shop at submission — see [Release & Submission](release-and-submission.md).
-
-So the typical test deploy is:
-
-```bash
-scp <YOUR-EFFECT>.so root@stratus.local:/opt/update/sftp/firmware/effects/55631e3a-94f7-42f8-8204-f5c6c11c4a21.so
-```
-
-Expected output:
-
-```
-<YOUR-EFFECT>.so                              100%   48KB   1.2MB/s   00:00
-```
-
-> **Warning:** never `scp` directly over a `.so` that is in the currently selected preset while the device is playing. `scp` truncates the destination file in place, and the firmware keeps every loaded `.so` memory-mapped for the life of the process (see Step 4) — truncating a mapped file can crash the audio process mid-note, *before* you even restart. If the effect is in the active chain, either select a preset that doesn't use it first, or copy to a temp name and atomically swap:
->
-> ```bash
-> scp <YOUR-EFFECT>.so root@stratus.local:/tmp/fx.so && \
-> ssh root@stratus.local 'mv /tmp/fx.so /opt/update/sftp/firmware/effects/<EFFECT-ID>.so && chown update:sftponly /opt/update/sftp/firmware/effects/<EFFECT-ID>.so && systemctl restart bela_startup'
-> ```
->
-> `mv` on the same filesystem replaces the directory entry without touching the old file's contents, so the running audio process keeps its old mapping intact until the restart.
-
-> **Warning:** NEVER create, edit, or delete a `.version` file under `/opt/update/sftp/firmware/`. That file is the update system's marker — touching it triggers a **full firmware reinstall**.
-
-> **Warning:** do not rename, overwrite, or delete the *other* `.so` files in `/opt/update/sftp/firmware/effects/`. They are the user's installed effects; the firmware reports an effect as installed purely by file existence, and a preset that references a missing effect will refuse to assemble. Only ever touch the file you put there.
-
-**Checkpoint:** `ssh root@stratus.local 'ls -l /opt/update/sftp/firmware/effects/55631e3a-*'` shows your file with today's transfer size.
-
-## Step 4 — Fix ownership and restart the audio service
-
-The effects directory is managed by the device's update/SFTP system, so your file must be owned by `update:sftponly`. The firmware also caches the `dlopen` handle of every loaded `.so` for the life of the process, so a replaced binary is only picked up after restarting the audio service (`bela_startup`):
-
-```bash
-ssh root@stratus.local 'chown update:sftponly /opt/update/sftp/firmware/effects/<EFFECT-ID>.so && systemctl restart bela_startup'
-```
-
-- `<EFFECT-ID>` — same ID you used in Step 3.
-
-Audio drops for a few seconds while the service restarts, then the device reconnects to the app.
-
-**Checkpoint:** the device's audio comes back and the app reconnects within ~10–15 seconds.
-
-## Step 5 — Audition it with the 9 KNOB tester
-
-In the Beta app, under the **"Development"** category, there is an effect titled **"9 KNOB"**. It exposes 9 parameters, each with a range of **0 to 10 and a step of 0.1**, and it maps to effect ID `55631e3a-94f7-42f8-8204-f5c6c11c4a21` — which is why you named your file exactly that in Step 3. Add "9 KNOB" to a preset, select the preset, and you are hearing *your* code with 9 live knobs.
-
-Because the tester only sends 0–10, design your test build's knob handling around that range (0–10, 5 = noon is the platform convention — see [DSP Contract](dsp-contract.md)). Knob values arrive raw and unclamped; validate them in your effect regardless.
-
-> **Warning:** do NOT tap "install" on the 9 KNOB effect in the app — it downloads the real tester binary and **overwrites your file**.
-
-**Checkpoint:** engaging the 9 KNOB effect in the app audibly runs your DSP; turning the app knobs changes it.
-
-## Step 6 — Read the logs
-
-The firmware logs everything about effect loading to the `bela_startup` journal. In a second terminal, follow it live:
+The firmware logs everything about effect loading to the `bela_startup` journal. Follow it live:
 
 ```bash
 ssh root@stratus.local 'journalctl -u bela_startup -f'
 ```
 
-Now select the preset containing your effect (or restart the service) and watch. A **healthy load** looks like this — these strings come from the firmware's effect loader (`effectsLoadingService.cpp`) and chain assembler (`effectsManipulationService.cpp`):
+Now select the preset containing your effect and watch. A **healthy load** looks like this — these strings come from the firmware's effect loader (`effectsLoadingService.cpp`) and chain assembler (`effectsManipulationService.cpp`):
 
 ```
 Version check found 2.0.0.
@@ -170,7 +139,7 @@ The "name" the loader prints is the full path of your `.so`, not your effect's d
 - `dlopen` failure — a linker error message followed by:
 
   ```
-  ./55631e3a-94f7-42f8-8204-f5c6c11c4a21.so: undefined symbol: __expf_finite
+  ./<EFFECT-ID>.so: undefined symbol: __expf_finite
   Effect does not exist.
   ```
 
@@ -182,42 +151,24 @@ The "name" the loader prints is the full path of your `.so`, not your effect's d
 
 **Checkpoint:** you can point at the "Effect found" and "Effects vector assembled" lines for your effect in the live journal.
 
-## Step 7 — Iterate fast
+### Hands off the effects directory
 
-After the first setup, the whole edit-test cycle is one rebuild plus this one-liner (about 20 seconds end to end, most of it the service restart):
+Everything under `/opt/update/sftp/firmware/effects/` is placed and owned by the platform now — treat the whole directory as read-only.
 
-```bash
-scp <YOUR-EFFECT>.so root@stratus.local:/opt/update/sftp/firmware/effects/<EFFECT-ID>.so && \
-ssh root@stratus.local 'chown update:sftponly /opt/update/sftp/firmware/effects/<EFFECT-ID>.so && systemctl restart bela_startup'
-```
+> **Warning:** NEVER create, edit, or delete a `.version` file under `/opt/update/sftp/firmware/`. That file is the update system's marker — touching it triggers a **full firmware reinstall**.
 
-> **Warning:** if the effect you are replacing is in the *currently playing* preset, use the copy-to-temp-and-`mv` variant from the Step 3 warning instead of this direct `scp` — overwriting a mapped `.so` in place can crash live audio before the restart.
+> **Warning:** do not rename, overwrite, or delete the `.so` files in `/opt/update/sftp/firmware/effects/`. They are installed effects; the firmware reports an effect as installed purely by file existence, and a preset that references a missing effect will refuse to assemble.
 
-Keep the `journalctl -f` terminal from Step 6 open the whole session — restarting `bela_startup` does not interrupt it, and every reload's "Effect found" line (or dlopen error) appears there immediately.
-
-> **Gotcha:** the restart is not optional. The firmware caches each loaded `.so` handle for the life of the process, so an scp'd replacement is ignored until `bela_startup` restarts.
-
-## Step 8 — Clean up
-
-When you're done testing, remove your test binary so the 9 KNOB slot goes back to normal (the user can reinstall the real tester from the app), and restart once more:
-
-```bash
-ssh root@stratus.local 'rm /opt/update/sftp/firmware/effects/55631e3a-94f7-42f8-8204-f5c6c11c4a21.so && systemctl restart bela_startup'
-```
-
-Remove **only** files you deployed yourself — that includes any stray GUID-shaped test files left over from *earlier* sessions, not just today's. Everything else in that directory belongs to the device.
-
-**Checkpoint:** the file is gone from `/opt/update/sftp/firmware/effects/` and the device boots its normal effect set.
+If you hand-deployed GUID-named test files under an earlier version of these docs, delete the ones *you* created — and nothing else in the directory.
 
 ## Quick reference
 
 | Item | Value |
 | --- | --- |
 | Effects directory | `/opt/update/sftp/firmware/effects/` |
-| Required filename | `<EFFECT-ID>.so` (GUID, exact) |
-| 9 KNOB tester ID | `55631e3a-94f7-42f8-8204-f5c6c11c4a21` |
-| Required ownership | `update:sftponly` |
-| Audio service | `bela_startup` (`systemctl restart bela_startup`) |
+| Binary name on device | `<EFFECT-ID>.so` — ID assigned by the platform, file placed by private-publish install |
+| Ownership | Managed by the platform — never `chown` or replace files by hand |
+| Audio service | `bela_startup` |
 | Live logs | `journalctl -u bela_startup -f` |
 | Healthy load lines | `Version check found 2.0.0.` / `Effect found with name:` (+ .so path) / `Effects vector assembled. size = N` |
 | Never touch | `/opt/update/sftp/firmware/.version` |

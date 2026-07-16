@@ -42,6 +42,10 @@ effect in these docs.
 
 ## What you can do today
 
+- Ship a capture as its own effect: `.nam` captures can already be uploaded
+  and published through the [FX Builder](https://build.chaosaudio.com)
+  today — what this page adds is using captures *inside your own plugin's*
+  DSP.
 - Build neural effects with **[RTNeural](https://github.com/jatinchowdhury18/RTNeural)**,
   already vendored in `modules/` and used by the AIDA-X effects in
   `featured/` — see the [repo tour](runtime-examples-map.md).

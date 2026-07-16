@@ -2,13 +2,13 @@
 
 This page is the test plan you run between "it compiled" and "I'm submitting it." It proves four things, in order: your `.so` **loads**, it **sounds right**, it **fits the CPU budget** on real hardware, and it **survives abuse** (garbage knob values, preset churn, odd block sizes, silence). It applies identically to Stratus and Nimbus — same CPU, same firmware, same effect format; every command shown for `stratus.local` works the same way on a Nimbus.
 
-You should already have a built binary in `bins/` (see [build-docker.md](build-docker.md)) and know how to copy it to the device (see [deploy-to-hardware.md](deploy-to-hardware.md)).
+You should already have a built binary in `bins/` (see [build-docker.md](build-docker.md)) and know how to get it onto the device — upload it to the FX Builder, publish privately, and install it from the Chaos Audio app (see [deploy-to-hardware.md](deploy-to-hardware.md), which also covers watching the firmware logs).
 
 ---
 
 ## 1. Does it load?
 
-The firmware loads effects with `dlopen(RTLD_NOW)` from `/opt/update/sftp/firmware/effects/<EFFECT-ID>.so`. `RTLD_NOW` means **every** undefined symbol must resolve at load time — one missing symbol and the effect silently vanishes from the chain. The only evidence is a line in the device journal. So check symbols *before* deploying, then confirm the load *on* the device.
+The firmware loads effects with `dlopen(RTLD_NOW)` from `/opt/update/sftp/firmware/effects/<EFFECT-ID>.so` — once you've installed your privately-published effect from the app, your binary sits there under its platform-assigned Effect ID. `RTLD_NOW` means **every** undefined symbol must resolve at load time — one missing symbol and the effect silently vanishes from the chain. The only evidence is a line in the device journal. So check symbols *before* uploading, then confirm the load *on* the device.
 
 ### 1a. Symbol sanity with `nm -D`
 
@@ -61,7 +61,7 @@ readelf -d bins/<YOUR-EFFECT>.so | grep NEEDED
 
 ### 1b. On-device load check via the journal
 
-Deploy the effect ([deploy-to-hardware.md](deploy-to-hardware.md) has the full `scp`/`chown`/restart sequence), then watch the loader in real time. SSH uses the developer password for your device (issued with the developer program — ask in the developer Discord/support if you don't have it).
+Get the effect onto the device: publish it privately in the FX Builder and install it from the Chaos Audio app ([deploy-to-hardware.md](deploy-to-hardware.md) walks through upload → UI Builder → private publish → install). Then watch the loader in real time. SSH uses the developer password for your device (issued with the developer program — ask in the developer Discord/support if you don't have it).
 
 ```bash
 ssh root@stratus.local 'journalctl -u bela_startup -f'
@@ -234,7 +234,7 @@ Each drill targets a real failure mode observed in the field. Run all five befor
 
 Knob values arrive **raw and unclamped** from presets and BLE. Real production presets have contained `128` where 0-10 was expected. `setKnob()` also runs on the controller thread *while* `compute()` runs on the audio thread, so values change mid-buffer.
 
-- **On device:** with the 9 KNOB tester ([deploy-to-hardware.md](deploy-to-hardware.md)), sweep every knob slowly end-to-end, then wiggle them fast, while playing. Listen for zipper noise, clicks, NaN blowups (sudden full-scale noise or dead silence that doesn't recover).
+- **On device:** with your privately-published effect installed from the app ([deploy-to-hardware.md](deploy-to-hardware.md)) — give its UI Builder test UI a knob for every parameter — sweep every knob slowly end-to-end, then wiggle them fast, while playing. Listen for zipper noise, clicks, NaN blowups (sudden full-scale noise or dead silence that doesn't recover).
 - **In the harness:** extend the Section 2b loop to hammer `setKnob` between blocks with hostile values:
 
 ```cpp

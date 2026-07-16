@@ -1,6 +1,6 @@
 # FAUST Effects Guide
 
-This page covers building effects for Stratus (and Nimbus — same CPU, same firmware, same `.so` format; every command shown for Stratus applies to Nimbus identically) in [FAUST](https://faust.grame.fr/), the recommended zero-toolchain starting path for effect development. It is written in two tiers: **Tier 1** gets you from zero to an effect running on your pedal with no toolchain installed, using only the online FAUST IDE. **Tier 2** explains the production compile contract — what you must know before your effect's knobs actually work on hardware and before you submit to Tone Shop.
+This page covers building effects for Stratus (and Nimbus — same CPU, same firmware, same `.so` format; every command shown for Stratus applies to Nimbus identically) in [FAUST](https://faust.grame.fr/), the recommended zero-toolchain starting path for effect development. It is written in two tiers: **Tier 1** gets you from zero to an effect running on your pedal with no toolchain installed, writing FAUST in the **FX Builder** in your browser. **Tier 2** explains the production compile contract — what you must know before your effect's knobs actually work on hardware and before you submit to Tone Shop.
 
 If you have never built an effect at all, do [quickstart.md](quickstart.md) first. If you want hand-written C++ instead, see [guide-native-cpp.md](guide-native-cpp.md).
 
@@ -12,34 +12,32 @@ Your `process` must be **mono: exactly one input and one output**. Stratus runs 
 
 ---
 
-## Tier 1 — Zero toolchain: the online FAUST IDE
+## Tier 1 — Zero toolchain: FAUST in the FX Builder
 
-The online FAUST IDE has integrated Stratus support and can produce an installer that puts your effect on the pedal — no compiler, no Docker, nothing installed locally. This flow is covered step-by-step in the official wiki tutorial: **[Faust and the Stratus — a basic tutorial](https://github.com/chaosaudio/Dev-Portal/wiki/Faust-and-the-Stratus-%E2%80%90-a-basic-tutorial)**. Summary:
+The **FX Builder** — Chaos Audio's browser-based development and publishing platform at <https://build.chaosaudio.com> — lets you write FAUST, hear it, and get it onto your pedal with no compiler, no Docker, nothing installed locally. You need a free Chaos Audio account (the same account as the Chaos Audio app — sign up in the FX Builder, or use "Reset Password" if you already have an app account). Summary:
 
-1. Open the online IDE at <https://faustide.grame.fr>.
-2. Write your effect and audition it in the browser — the IDE runs your FAUST code live against your audio input or a test file, with every slider on screen. Iterate here until it sounds right.
-3. Add the `[stratus:N]` metadata to every control you want mapped to a hardware knob or switch. **This applies to the IDE path too**, not just production submission — read the binding rules in Tier 2 below before you export. A control without valid `[stratus:N]` metadata will install fine and then do nothing on the pedal.
-4. Open the IDE's export dialog (the truck icon), and select platform **`chaos-stratus`**, architecture **`effect-installer`**.
-5. Download the generated `.zip`.
-6. With your Stratus (or Nimbus) powered on and connected to your computer with a USB cable (the devices have no Wi-Fi — SSH runs over the USB link; see [deploy-to-hardware.md](deploy-to-hardware.md)), follow the tutorial's install steps to run the installer from the zip. It builds and installs the effect into the device's effects directory for you. You will need SSH access to the device: the developer password for your device (issued with the developer program — ask in the developer Discord/support if you don't have it).
+1. Sign in at <https://build.chaosaudio.com> and create a new effect.
+2. Write your FAUST code directly in the browser editor — or describe the sound you want and let the optional AI assistance draft and iterate on the FAUST for you. The FX Builder validates and compiles it for Stratus/Nimbus in the cloud.
+3. Audition it in the browser — the built-in audio test runs your effect with every control on screen. Iterate here until it sounds right.
+4. Add the `[stratus:N]` metadata to every control you want mapped to a hardware knob or switch. **This applies to the browser path too**, not just production submission — read the binding rules in Tier 2 below before you publish. A control without valid `[stratus:N]` metadata will install fine and then do nothing on the pedal.
+5. Give the effect a quick UI in the **UI Builder** (knobs, switches, LED, background — store images can be auto-generated), then **publish privately**. Private publish is instant — no review — and the effect appears only in your own account's library in the Chaos Audio app.
+6. Install the effect on your Stratus (or Nimbus) from the Chaos Audio app like any other effect, and play. Iterate by editing your FAUST and re-publishing.
 
-**Checkpoint:** the effect is installed on the device; audition it from the Beta version of the Chaos Audio app (see the "9 KNOB" tester workflow in [deploy-to-hardware.md](deploy-to-hardware.md)). To watch it load, run this on the device:
+**Checkpoint:** the effect shows up in your account's library in the Chaos Audio app, installs to the device, and makes sound. To watch it load (optional — the devices have no Wi-Fi, so SSH runs over the USB link; see [deploy-to-hardware.md](deploy-to-hardware.md)), run this on the device:
 
 ```bash
 journalctl -f -u bela_startup.service
 ```
 
-You should see the effect found and loaded with no `dlopen` errors (see [troubleshooting.md](troubleshooting.md) if not).
+You should see the effect found and loaded with no `dlopen` errors (see [troubleshooting.md](troubleshooting.md) if not). Once installed via private publish, the effect lives on-device as `<EFFECT-ID>.so` under its platform-assigned ID — no manual file placement is involved.
 
-> **Warning:** in the Beta app's "9 KNOB" tester, do **not** tap "install" — it overwrites your binary with an unrelated one (`README.md`, Testing section).
-
-The "9 KNOB" tester sends knob values in the range **0–10 with step 0.1** (`README.md`, Testing section). Design your FAUST sliders on a 0–10 range and map to real units (Hz, dB) inside your code — see the annotated example below.
+The app sends knob values in the range **0–10 with step 0.1**. Design your FAUST sliders on a 0–10 range and map to real units (Hz, dB) inside your code — see the annotated example below.
 
 ---
 
 ## Tier 2 — The production contract
 
-Everything below is what the production pipeline (the same one that compiles Tone Shop submissions) actually does with your FAUST source. Knowing it is the difference between "compiles" and "works on hardware".
+Everything below is what the production pipeline (the FX Builder's cloud compile — the same one that compiles Tone Shop submissions) actually does with your FAUST source. Knowing it is the difference between "compiles" and "works on hardware".
 
 ### What the pipeline does with your code
 
@@ -97,7 +95,7 @@ declare name "Dirt Drive";   // fine locally; overwritten by the platform at sub
 import("stdfaust.lib");
 
 // ---- Controls -------------------------------------------------------------
-// All sliders use the 0-10 range the app and the "9 KNOB" tester send.
+// All sliders use the 0-10 range the app sends.
 // [stratus:0] in the LABEL binds this slider to hardware knob 0.
 
 drive  = hslider("Drive[stratus:0]", 5, 0, 10, 0.1) : si.smoo;   // knob 0
@@ -125,9 +123,9 @@ Points worth copying:
 
 For contrast, the repo's own `examples/pluto/pluto.dsp` and `examples/spectrometer/spectrometer.dsp` have **no** `[stratus:N]` metadata — they predate this pipeline (their `.cpp` files were hand-adapted to read `knobs[]` directly). Do not feed those `.dsp` files through the production pipeline as-is; their sliders would not bind.
 
-### Forbidden declares (Tone Shop submissions)
+### Forbidden declares (FX Builder compiles)
 
-When you submit FAUST source for Tone Shop, the platform **auto-injects** these declares into your code before compiling, generated from your draft:
+When the FX Builder compiles your FAUST source — for a private publish or a Tone Shop submission — the platform **auto-injects** these declares into your code before compiling, generated from your draft:
 
 ```faust
 declare stratusId "…";       // server-generated GUID — the effect's identity
@@ -136,13 +134,13 @@ declare filename "…";
 declare name "…";            // your draft's name
 ```
 
-Do **not** write `declare stratusId`, `declare stratusVersion`, or `declare filename` yourself in submitted code — the platform owns them, and hand-written values conflict with the injected ones. `declare name` is likewise overwritten at submission (writing it is fine for local and IDE builds, where it is used as-is).
+Do **not** write `declare stratusId`, `declare stratusVersion`, or `declare filename` yourself in submitted code — the platform owns them, and hand-written values conflict with the injected ones. `declare name` is likewise overwritten at submission (writing it is fine for local builds, where it is used as-is).
 
 ### Soundfiles and libraries
 
 - All the standard FAUST libraries (`stdfaust.lib` and friends) are available; `import("stdfaust.lib");` works everywhere.
 - The `soundfile` primitive is supported by the production pipeline, referenced as `soundfile("label[url:{'name.wav'}]", 1)`. The submission platform enforces limits of up to **10 files, 500 KB total** (see [release-and-submission.md](release-and-submission.md)); the compile pipeline itself just embeds whatever files you provide. The files are embedded into the compiled binary at build time — there is no filesystem access on the device at runtime.
-- Code using `ffunction()` (external C functions / lookup tables) cannot compile in a browser: it only builds where the referenced C code is available, i.e. server-side in the production pipeline. Expect the online IDE's in-browser run to fail on it.
+- Code using `ffunction()` (external C functions / lookup tables) cannot compile in a browser: it only builds where the referenced C code is available, i.e. server-side in the production pipeline. Expect any in-browser run — the FX Builder audition or the online FAUST IDE — to fail on it.
 - Everything is float32 (`-single`) at a fixed 44 100 Hz. There is no double-precision path on the Cortex-A8's NEON unit — see [runtime-environment.md](runtime-environment.md).
 
 ### Testing FAUST output locally with Docker
@@ -173,7 +171,7 @@ g++ -fPIC -shared -O3 -march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard \
 ```
 
 - `<YOUR-EFFECT>.cpp` — the FAUST-generated C++ file (it is self-contained; the architecture wrapper is inlined).
-- `<EFFECT-ID>.so` — for local testing any GUID-shaped name works; the real Effect ID is assigned at submission ([release-and-submission.md](release-and-submission.md)).
+- `<EFFECT-ID>.so` — the file name doesn't matter for this local check; the real Effect ID is assigned by the platform when you create the effect in the FX Builder, and the platform names the hosted binary itself ([release-and-submission.md](release-and-submission.md)).
 
 **Checkpoint:** the command exits silently and produces the `.so`. Verify the architecture:
 
@@ -206,26 +204,25 @@ If you get this far, your binary would load on the pedal.
 
 > **Gotcha:** `benchmark-plugin` was written for the hand-written C++ ABI: after loading it invokes `instanceConstants()` and `benchmark()` (`tests/benchmark_plugin.cpp:55` onward). FAUST-architecture binaries do not populate the `benchmark` vtable slot, so the run may crash or print garbage *after* the lines shown above — that is a harness/ABI mismatch, not a defect in your effect. Treat everything through "Setting sample rate" as the meaningful check, and measure real performance on the device instead ([verification.md](verification.md) — QEMU timing numbers are meaningless anyway).
 
-Two other off-pedal options:
+Other off-pedal options:
 
-- The online FAUST IDE itself — live audio testing in the browser before any export.
+- The FX Builder's in-browser audition (Tier 1 above) — paste the same FAUST source into the browser editor and hear it there, knobs on screen.
+- The online FAUST IDE at <https://faustide.grame.fr> — a useful scratchpad for live-auditioning FAUST in the browser; treat it as an experimentation/reference tool only, not a way to build or install Stratus effects.
 - The [chaos-stratus Python wrapper](https://pypi.org/project/chaos-stratus/) (`README.md`, Testing section): build your effect for your local machine with FAUST tooling, then drive its knobs/switches and process audio from a Python script.
 
-To put a locally built `.so` on your device by hand (scp, ownership, service restart, log-watching), follow [deploy-to-hardware.md](deploy-to-hardware.md).
+To run a locally built `.so` on your device, upload it to the FX Builder and publish privately — [deploy-to-hardware.md](deploy-to-hardware.md) walks through that flow and the optional firmware log-watching.
 
-### IDE installer vs Tone Shop submission
+### Private publish vs Tone Shop submission
 
-The two FAUST outputs are not the same thing:
+Both go through the FX Builder's cloud compile — the production pipeline with the exact flags above, `declare stratusId` etc. auto-injected, and the binary named `<EFFECT-ID>.so` from the platform-assigned GUID. What differs is review and reach:
 
-| | Tier 1: IDE `effect-installer` | Tone Shop submission |
+| | Private publish | Tone Shop submission |
 |---|---|---|
 | Purpose | Personal testing on **your** device | Public/paid release to all users |
-| Compiler | IDE toolchain (FAUST version may differ from production) | Production pipeline: FAUST 2.83.x + bullseye ARM g++, exact flags above |
-| Effect ID | Local/dev naming on your device | Platform-assigned GUID; binary is named `<EFFECT-ID>.so` |
-| `declare stratusId` etc. | Not injected | Auto-injected — never write them yourself |
-| Distribution | Only the pedal you install to | Tone Shop, with artwork/version/review requirements |
+| Review | None — instant | Chaos Audio review, typically 5–7 business days |
+| Distribution | Only your own account's library in the Chaos Audio app | Tone Shop, for both Stratus and Nimbus users, with artwork/version/review requirements |
 
-Because the compilers can differ, always re-verify the production-compiled result — binding metadata (`[stratus:N]`) and the constraints on this page are what carry over unchanged. The submission flow itself (drafts, assets, review, versioning) is documented in [release-and-submission.md](release-and-submission.md).
+And the in-browser audition is neither of these: it is not the production-compiled binary. Always re-verify the production-compiled result on your pedal (a private publish) — binding metadata (`[stratus:N]`) and the constraints on this page are what carry over unchanged. The submission flow itself (drafts, assets, review, versioning) is documented in [release-and-submission.md](release-and-submission.md).
 
 ---
 

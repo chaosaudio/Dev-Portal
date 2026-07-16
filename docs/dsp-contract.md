@@ -194,7 +194,7 @@ g++ -std=c++14 -fPIC -shared -O3 -mcpu=cortex-a8 -mtune=cortex-a8 -mfloat-abi=ha
 
 Note the `-std=c++14`: the repo's CMake builds every example as C++14 (`examples/CMakeLists.txt` sets `CMAKE_CXX_STANDARD 14`), so prototype with the same standard — C++17 features that compile standalone will fail the moment you wire the same file into `examples/`.
 
-`<EFFECT-ID>` is the GUID your .so must be named after — any GUID-shaped name works for local testing; the Tone Shop assigns the real one at submission (see [deploy-to-hardware.md](deploy-to-hardware.md) and [release-and-submission.md](release-and-submission.md)).
+`<EFFECT-ID>` is the GUID the platform assigns when you create your effect in the FX Builder — you never invent it. To run the compiled `.so` on hardware, upload it to the FX Builder and publish privately (see [deploy-to-hardware.md](deploy-to-hardware.md) and [release-and-submission.md](release-and-submission.md)).
 
 > **Warning:** `-fno-finite-math-only` is load-bearing. Plain `-ffast-math` makes GCC emit `__expf_finite`-style libm references that the device's libm does not export; `dlopen(RTLD_NOW)` then fails at load and your effect silently never appears — the only evidence is a dlerror line in `journalctl -u bela_startup`. This is verified on hardware.
 

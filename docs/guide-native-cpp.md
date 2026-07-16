@@ -14,7 +14,7 @@ A classic tremolo: an LFO modulates the signal's volume.
 | Depth      | `knobs[1]` | 0–10      | 0–100 % modulation depth           |
 | Wave       | `knobs[2]` | 0–10      | 3-position selector: sine / triangle / square |
 
-The wave selector is a knob used as a stepped selector via the `SELECTOR` macro from `resources/dsp.hpp`. That is the most convenient choice while testing with the Beta app's 9 KNOB effect, which exposes nine 0–10 knobs. A production effect can instead use a real 3-position switch through `switches[]` (`SWITCH_STATE`: `UP=0`, `DOWN=1`, `MIDDLE=2`) — see [the DSP contract](dsp-contract.md) for switch semantics.
+The wave selector is a knob used as a stepped selector via the `SELECTOR` macro from `resources/dsp.hpp`. A production effect can instead use a real 3-position switch through `switches[]` (`SWITCH_STATE`: `UP=0`, `DOWN=1`, `MIDDLE=2`) — see [the DSP contract](dsp-contract.md) for switch semantics.
 
 ## Before you start
 
@@ -503,34 +503,38 @@ Note that `benchmark()` just called your `compute()` once with 88 200 samples. I
 
 **Checkpoint:** the harness prints the full sequence above with no `Cannot open library` error. If `dlopen` fails here, it will fail on the pedal too — see [troubleshooting](troubleshooting.md).
 
-## Deploy to the pedal
+## Put it on the pedal
 
-Copy the `.so` to the device's effects directory under the Effect ID name, fix ownership, and restart the audio service. The same hostname and commands apply on Nimbus — the procedure is identical. You'll need the developer password for your device (issued with the developer program — ask in the developer Discord/support if you don't have it).
+Your compiled `.so` gets onto hardware through the **FX Builder** ([build.chaosaudio.com](https://build.chaosaudio.com)) — upload the binary and publish privately:
 
-```bash
-scp bins/tremolo.so root@stratus.local:/opt/update/sftp/firmware/effects/<EFFECT-ID>.so
-ssh root@stratus.local 'chown update:sftponly /opt/update/sftp/firmware/effects/<EFFECT-ID>.so && systemctl restart bela_startup'
-```
+1. Create an effect in the FX Builder and upload `bins/tremolo.so`. The upload must be a 32-bit ARM shared object under 5 MB — exactly what the container just produced and `file` confirmed.
+2. Give it a quick UI in the **UI Builder** — three knobs (Rate, Depth, Wave) is all this effect needs.
+3. **Publish privately.** Private publish is instant (no review); the effect appears only in your own account's library in the Chaos Audio app.
+4. Install it on your Stratus or Nimbus from the app, like any other effect, and play.
 
-`<EFFECT-ID>` — the GUID the firmware knows the effect by; the file must be named exactly `<EFFECT-ID>.so`. For local testing any GUID-shaped name works as long as a preset references it, but the easiest path is the Beta app's **9 KNOB** tester effect, whose ID is `55631e3a-94f7-42f8-8204-f5c6c11c4a21` — name your file `55631e3a-94f7-42f8-8204-f5c6c11c4a21.so` and you can audition the tremolo from the app with nine live 0–10 knobs (Rate = knob 1, Depth = knob 2, Wave = knob 3). The real Effect ID for a released effect is assigned at submission — see [release and submission](release-and-submission.md).
+The platform assigns your effect's **Effect ID (GUID)** when the effect is created — you never invent one — and the installed binary lives on-device as `<EFFECT-ID>.so`. To iterate, upload a new binary and re-publish. The Effect ID stays for the life of the effect, through public release too — see [release and submission](release-and-submission.md).
 
-> **Warning:** Never create or modify a `.version` file in `/opt/update/sftp/firmware/` — it triggers a full firmware reinstall.
+> **Warning:** The platform only checks that an uploaded binary is a 32-bit ARM shared object under 5 MB — it does **not** validate your exports, ABI, or CPU cost, and uploaded prebuilt binaries can't be auditioned in the browser. The container smoke-test above and the [verification](verification.md) checklist are your safety net before anything reaches your pedal.
 
-Full deployment details (and what to do when the effect doesn't appear) are in [deploy to hardware](deploy-to-hardware.md).
+Full hardware-testing details (and what to do when the effect doesn't appear) are in [test on hardware](deploy-to-hardware.md).
 
 ## Verify on hardware
 
-Watch the service log while it restarts:
+Optionally, watch the firmware log while the effect loads (the same hostname and commands apply on Nimbus; the SSH password for your device comes from support@chaosaudio.com or the developer Discord — see [test on hardware](deploy-to-hardware.md) for finding the device):
 
 ```bash
 ssh root@stratus.local 'journalctl -u bela_startup -f'
 ```
 
-Look for the effect being found and loaded, and make sure no `dlopen` error or `Underrun detected` lines appear. Then select the effect (9 KNOB in the Beta app), play, and check each control:
+Look for the effect being found and loaded, and make sure no `dlopen` error or `Underrun detected` lines appear.
 
-1. **Rate** (knob 1): sweep 0→10; pulsing speeds up from a slow ~0.5 Hz throb to a fast 12 Hz flutter.
-2. **Depth** (knob 2): at 0 the effect is transparent; at 10 the signal pumps almost to silence.
-3. **Wave** (knob 3): three distinct zones — smooth (sine), linear ramp (triangle), hard chop (square). No clicks when moving Depth, thanks to the smoother.
+> **Warning:** SSH is for observation only. Never create or modify a `.version` file in `/opt/update/sftp/firmware/` — it triggers a full firmware reinstall — and never touch other effects' `.so` files.
+
+Then select your private effect in the Chaos Audio app, play, and check each control:
+
+1. **Rate** (`knobs[0]`): sweep 0→10; pulsing speeds up from a slow ~0.5 Hz throb to a fast 12 Hz flutter.
+2. **Depth** (`knobs[1]`): at 0 the effect is transparent; at 10 the signal pumps almost to silence.
+3. **Wave** (`knobs[2]`): three distinct zones — smooth (sine), linear ramp (triangle), hard chop (square). No clicks when moving Depth, thanks to the smoother.
 4. **Stomp:** bypassed = clean dry signal (you wrote no bypass code — that's the in-place contract working).
 
 **Checkpoint:** all three knobs behave as mapped and the log stays free of underruns. For real CPU measurement (`/proc/xenomai/sched/stat`, the ~15 %-of-core budget guidance, and the benchmark-numbers-on-device gotchas), continue to [verification](verification.md).

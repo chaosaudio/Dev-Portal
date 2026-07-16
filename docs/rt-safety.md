@@ -331,7 +331,7 @@ void compute(int count, float* in, float* out) override {
 
 ### Verify on the device, not by feel
 
-After deploying (see [deploy-to-hardware.md](deploy-to-hardware.md)), watch for underruns while you play:
+Once your effect is on the device (upload it to the FX Builder and publish privately — see [deploy-to-hardware.md](deploy-to-hardware.md)), watch for underruns while you play:
 
 ```
 ssh root@stratus.local 'journalctl -u bela_startup -f'

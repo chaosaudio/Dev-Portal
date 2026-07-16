@@ -14,7 +14,10 @@ This page is a symptom-indexed reference for everything that commonly goes wrong
 | Crash the moment the effect loads | [6](#6-crash-at-load) |
 | Effect sounds wrong only in 16-sample chunks | [7](#7-effect-sounds-wrong-only-at-16-sample-chunks) |
 | Docker container build fails | [8](#8-container-build-fails) |
-| ssh / scp to the device refused | [9](#9-sshscp-refused) |
+| ssh to the device refused | [9](#9-ssh-to-the-device-refused) |
+| FX Builder rejects the `.so` at upload | [10](#10-binary-upload-rejected-by-the-fx-builder) |
+| Private effect not visible in the app | [11](#11-private-effect-not-visible-in-the-chaos-audio-app) |
+| Can't submit for review — agreement popup | [12](#12-submission-blocked-until-you-accept-the-developer-distribution-agreement) |
 
 ## First move: read the log
 
@@ -34,7 +37,7 @@ Effect found with name:
 /opt/update/sftp/firmware/effects/<EFFECT-ID>.so
 ```
 
-`<EFFECT-ID>` is the GUID your `.so` is named after (see [deploy-to-hardware.md](deploy-to-hardware.md)).
+`<EFFECT-ID>` is the production Effect ID the FX Builder assigned when you created the effect — the platform names the hosted binary `<EFFECT-ID>.so` and places it on the device when you install your effect from the Chaos Audio app (see [deploy-to-hardware.md](deploy-to-hardware.md)).
 
 These lines appear only the **first** time the `.so` is loaded after a service restart; on later preset loads the cached handler is reused silently — restart `bela_startup` if you need to see the load lines again.
 
@@ -44,9 +47,9 @@ These lines appear only the **first** time the `.so` is loaded after a service r
 
 ## 1. Effect never appears in the chain
 
-**Symptom:** you copied the `.so` to the device, restarted `bela_startup`, selected the preset — and your effect is simply absent. No crash, no error in the app; the chain behaves as if the effect were never installed.
+**Symptom:** you published your effect privately in the FX Builder, installed it from the Chaos Audio app, selected the preset — and your effect is simply absent. No crash, no error in the app; the chain behaves as if the effect were never installed.
 
-The firmware loads effects with `dlopen(..., RTLD_NOW)` from `/opt/update/sftp/firmware/effects/<EFFECT-ID>.so`. With `RTLD_NOW`, **every** undefined symbol must resolve at load time — one unresolvable symbol and the effect is silently dropped from the chain. The only evidence is in the journal. There are four common causes; each produces a distinct journal line.
+The firmware loads effects with `dlopen(..., RTLD_NOW)` from `/opt/update/sftp/firmware/effects/<EFFECT-ID>.so`. With `RTLD_NOW`, **every** undefined symbol must resolve at load time — one unresolvable symbol and the effect is silently dropped from the chain. The only evidence is in the journal. Uploaded prebuilt binaries are the usual victims: the FX Builder's upload gate only checks "32-bit ARM shared object under 5 MB" — it does **not** validate exports or ABI, so a broken `.so` sails through upload and only fails here (see [10](#10-binary-upload-rejected-by-the-fx-builder)). There are four common causes; each produces a distinct journal line.
 
 ### 1a. `__expf_finite` undefined — missing `-fno-finite-math-only`
 
@@ -68,7 +71,7 @@ Effect does not exist.
 
 **Fix:** add `-fno-finite-math-only` after `-ffast-math` and rebuild. If you use the repo's CMake/Docker flow ([build-docker.md](build-docker.md)) you already have it — this bites people who hand-roll a `g++` line.
 
-**How to confirm:** before deploying, check the binary for finite-math imports (run inside the build container or on any Linux box):
+**How to confirm:** before uploading, check the binary for finite-math imports (run inside the build container or on any Linux box):
 
 ```
 nm -D --undefined-only <YOUR-EFFECT>.so | grep _finite
@@ -135,21 +138,21 @@ Expected output (a defined `T` symbol, unmangled):
 
 If you see nothing, or a mangled name like `_Z6createv`, the `extern "C"` is missing.
 
-### 1d. Wrong filename
+### 1d. Missing or shadowed file on the device
 
-**Symptom:** no dlopen error at all — often no log lines for your effect whatsoever, and the app may report the effect as not installed. If the name is close-but-wrong you may instead see:
+**Symptom:** no dlopen error at all — often no log lines for your effect whatsoever, and the app may report the effect as not installed. You may instead see:
 
 ```
 /opt/update/sftp/firmware/effects/<EFFECT-ID>.so: cannot open shared object file: No such file or directory
 Effect does not exist.
 ```
 
-**Cause:** the file must be named exactly `<EFFECT-ID>.so` — the GUID the preset references, nothing else. `resources/compilation_flags.txt` spells this out (`-o "Effect ID".so`). Two extra wrinkles:
+**Cause:** the firmware loads exactly `<EFFECT-ID>.so` — the platform-assigned GUID the preset references, nothing else. Since the FX Builder names the hosted binary and the app places it on the device, you can no longer misname the file by hand — but two wrinkles remain:
 
-- The firmware reports an effect as "installed" purely on file existence, and **a preset containing any missing effect is not assembled at all** — so one misnamed file can make the whole preset load empty.
+- The firmware reports an effect as "installed" purely on file existence, and **a preset containing any missing effect is not assembled at all** — so one missing file can make the whole preset load empty.
 - A same-GUID `.namb`/`.nam` (NAM model) or `.wav` (IR) file in the effects directory **shadows** your `.so`: the loader prefers those file types for a given GUID.
 
-**Fix:** name the file exactly `<EFFECT-ID>.so` (case-sensitive, no suffixes like `-v2`), and make sure no `.nam`/`.namb`/`.wav` with the same GUID sits in `/opt/update/sftp/firmware/effects/`. For bench testing with the Beta app's "9 KNOB" tester, the name must be exactly `55631e3a-94f7-42f8-8204-f5c6c11c4a21.so` — see [deploy-to-hardware.md](deploy-to-hardware.md).
+**Fix:** reinstall the effect from the Chaos Audio app. If you hand-deployed GUID-named test files under `/opt/update/sftp/firmware/effects/` in the old workflow, delete the stray files **you** created — a stale same-GUID file (especially a `.nam`/`.namb`/`.wav`) can shadow what the platform installs. Never touch other users' `.so` files.
 
 **How to confirm:**
 
@@ -157,7 +160,7 @@ Effect does not exist.
 ssh root@stratus.local 'ls -l /opt/update/sftp/firmware/effects/ | grep -i <EFFECT-ID>'
 ```
 
-You should see exactly one file, `<EFFECT-ID>.so`, owned by `update:sftponly`.
+You should see exactly one file, `<EFFECT-ID>.so`, owned by `update:sftponly` (files here are placed and managed by the platform).
 
 ---
 
@@ -185,9 +188,9 @@ Rules: sliders → knobs (max 10, indices 0–9); buttons/checkboxes → switche
 
 **Cause:** the app sends knob 0, your code reads `knobs[1]` — or your UI metadata maps a control to an index your `compute()` never reads. `knobs[]` is a plain `float knobs[MAXKNOBS]` array (`MAXKNOBS` is 10, `resources/dsp.hpp`); nothing warns you about reading the wrong slot, it just sits at its default of `0.5`.
 
-**Fix:** cross-check the index your app-side control metadata declares against the index you read in code. With the "9 KNOB" tester effect, knob positions map to indices 0–8 (verify the exact ordering with a quick per-index test), sending values 0–10.
+**Fix:** cross-check the index your UI declares for each control (assigned when you lay out the effect in the FX Builder's UI Builder) against the index you read in code. If in doubt, verify the ordering with a quick per-index test — give each index a distinct, obvious behavior and check which control moves it.
 
-**How to confirm:** temporarily log knob values **outside** the audio path — e.g. print `knobs[0..9]` from `instanceConstants()` (which runs at chain assembly, off the audio thread), redeploy, and watch the journal while re-loading the preset. Never `printf` from `compute()` — see [rt-safety.md](rt-safety.md).
+**How to confirm:** temporarily log knob values **outside** the audio path — e.g. print `knobs[0..9]` from `instanceConstants()` (which runs at chain assembly, off the audio thread), upload the rebuilt `.so` and re-publish privately, and watch the journal while re-loading the preset. Never `printf` from `compute()` — see [rt-safety.md](rt-safety.md).
 
 ### 2c. Knob read only in the constructor
 
@@ -230,7 +233,7 @@ Rules: sliders → knobs (max 10, indices 0–9); buttons/checkboxes → switche
 
 **Fix:** trust the enum, never the debug printer. Write `switch` statements against `dsp::UP` / `dsp::DOWN` / `dsp::MIDDLE` by name, not against remembered numbers. In FAUST, a 3-position `nentry(..., 0, 0, 2, 1)` bound with `[stratus:N]` delivers 0/1/2 with the same UP/DOWN/MIDDLE meaning.
 
-**How to confirm:** hardcode a distinct, obvious behavior per named enum value (e.g. `UP` = silence, `DOWN` = full wet, `MIDDLE` = half gain), deploy, and flip the physical/app switch through all three positions.
+**How to confirm:** hardcode a distinct, obvious behavior per named enum value (e.g. `UP` = silence, `DOWN` = full wet, `MIDDLE` = half gain), re-publish privately and reinstall from the app, then flip the physical/app switch through all three positions.
 
 ---
 
@@ -449,9 +452,11 @@ Full walk-through of the container flow: [build-docker.md](build-docker.md). Exp
 
 ---
 
-## 9. ssh/scp refused
+## 9. ssh to the device refused
 
-**Symptom:** `scp`/`ssh` to `root@stratus.local` fails — connection refused, timeout, password rejected, or a scary host-key warning.
+**Symptom:** `ssh` to `root@stratus.local` fails — connection refused, timeout, password rejected, or a scary host-key warning.
+
+You only need SSH for observation — watching the firmware logs and measuring real CPU ([verification.md](verification.md)). Effects are installed through the FX Builder and the Chaos Audio app, never by copying files (see [deploy-to-hardware.md](deploy-to-hardware.md)).
 
 ### 9a. Host key changed
 
@@ -498,6 +503,54 @@ ping -c 3 stratus.local
 Expected output: three replies. Resolution failure with a pingable IP = mDNS problem; no replies at all = power/network problem.
 
 > **Gotcha:** while poking around in `/opt/update/sftp/firmware/`, never create or modify a `.version` file there — it triggers a full firmware reinstall on next boot.
+
+---
+
+## 10. Binary upload rejected by the FX Builder
+
+**Symptom:** the FX Builder refuses your `.so` when you upload it to an effect (create effect → upload binary).
+
+**Cause:** the upload gate checks exactly one thing: the file must be a **32-bit ARM shared object under 5 MB**. The usual rejections:
+
+- **Not a 32-bit ARM shared object** — you built with your host toolchain (x86-64 or 64-bit ARM output) instead of inside the container. The Docker flow ([build-docker.md](build-docker.md)) produces the right architecture by construction.
+- **Over 5 MB** — trim what you bake into the binary until it fits under the limit.
+
+> **Warning:** passing upload is not validation. The platform does **not** check exports, ABI, or CPU cost, and shows a default CPU estimate for uploaded binaries — the verification checklist ([verification.md](verification.md)) is still your safety net before anyone plays through your effect.
+
+**How to confirm:** inside the build container or on any Linux box:
+
+```
+file <YOUR-EFFECT>.so
+```
+
+Expected output includes `ELF 32-bit LSB shared object, ARM`. Then check the size with `ls -lh <YOUR-EFFECT>.so` — under 5 MB.
+
+---
+
+## 11. Private effect not visible in the Chaos Audio app
+
+**Symptom:** you published privately in the FX Builder, but the effect doesn't show up in your library in the Chaos Audio app.
+
+**Cause:** private publish is instant (no review), but the effect appears **only** in the library of the account that published it — and the app may be showing a stale library list.
+
+**Fix:**
+
+- Make sure the app is signed in to the **same Chaos Audio account** you use in the FX Builder — it's one account across both.
+- Pull-to-refresh the library; if the effect still doesn't appear, sign out of the app and back in.
+
+**How to confirm:** the effect shows up in your library and installs on your Stratus/Nimbus like any other effect.
+
+---
+
+## 12. Submission blocked until you accept the Developer Distribution Agreement
+
+**Symptom:** you submit your effect for public review and the FX Builder stops you with a click-through popup instead of submitting.
+
+**Cause:** not a bug. On your **first** public submission — and again whenever the agreement version changes — you must accept the **Developer Distribution Agreement** before the submission can proceed.
+
+**Fix:** read the agreement in the popup (scroll through it; you can download a copy), then click Accept — the submission continues immediately. The agreement also lives at <https://build.chaosaudio.com/developer-agreement>, and the rest of the review flow is covered in [release-and-submission.md](release-and-submission.md).
+
+**How to confirm:** after accepting, the effect shows as submitted; review by Chaos Audio typically takes 5–7 business days.
 
 ---
 

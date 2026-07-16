@@ -19,7 +19,7 @@ g++ -std=c++14 -fPIC -shared -O3 -mcpu=cortex-a8 -mtune=cortex-a8 -mfloat-abi=ha
 ```
 
 - `<YOUR-EFFECT>.cpp` — your effect source file (it must `#include "dsp.hpp"` from `resources/`; see [dsp-contract.md](dsp-contract.md)).
-- `<EFFECT-ID>` — the GUID the file must be named after; see [Output file naming](#output-file-naming-effect-idso) below.
+- `<EFFECT-ID>` — the GUID the platform assigns your effect (the name the firmware loads it by); see [Output file naming](#output-file-naming-effect-idso) below.
 
 **Checkpoint:** you have a `.so` with no `lib` prefix, named `<EFFECT-ID>.so`.
 
@@ -195,15 +195,15 @@ The firmware loads effects strictly by filename from `/opt/update/sftp/firmware/
 
 Where the GUID comes from:
 
-- **Local testing:** any GUID-shaped name works. To audition your effect from the Beta app's "9 KNOB" tester, name it after the tester's known Effect ID — see [deploy-to-hardware.md](deploy-to-hardware.md).
-- **Tone Shop release:** the platform assigns the real Effect ID at submission; you never invent it. See [release-and-submission.md](release-and-submission.md).
+- **Hardware testing:** the platform assigns the Effect ID when you create the effect in the FX Builder — you never invent it. Upload your `.so` there and **publish privately**; the platform hosts the binary as `<EFFECT-ID>.so`, and installing the effect from the Chaos Audio app places it on-device under that name — see [deploy-to-hardware.md](deploy-to-hardware.md). (Your local filename doesn't matter — the platform names the hosted copy.)
+- **Tone Shop release:** the same Effect ID stays for the life of the effect; ship updates by submitting a new version through the FX Builder. See [release-and-submission.md](release-and-submission.md).
 
-After deploying, verify the load on the device (Stratus shown; Nimbus is identical):
+After installing your privately published effect from the Chaos Audio app, verify the load on the device (Stratus shown; Nimbus is identical):
 
 ```bash
 journalctl -f -u bela_startup.service
 ```
 
-Look for `Effect found` (good) or a `dlopen`/`dlerror` line (one of the two traps on this page). Full deploy procedure and log walkthrough: [deploy-to-hardware.md](deploy-to-hardware.md); performance measurement: [verification.md](verification.md).
+Look for `Effect found` (good) or a `dlopen`/`dlerror` line (one of the two traps on this page). Full hardware-testing procedure and log walkthrough: [deploy-to-hardware.md](deploy-to-hardware.md); performance measurement: [verification.md](verification.md).
 
 Next: [deploy-to-hardware.md](deploy-to-hardware.md)

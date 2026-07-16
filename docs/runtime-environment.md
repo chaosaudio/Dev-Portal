@@ -240,8 +240,10 @@ the audio thread. Here is exactly what happens to your effect, in order:
 
 1. **First use only — the `.so` is loaded.** `dlopen(RTLD_NOW)` from
    `/opt/update/sftp/firmware/effects/<EFFECT-ID>.so`, then `create()` is
-   called to construct an instance. `<EFFECT-ID>` is the GUID filename your
-   effect is deployed under — see [Deploy to hardware](deploy-to-hardware.md).
+   called to construct an instance. `<EFFECT-ID>` is the GUID the FX Builder
+   assigns your effect — installing your published effect from the Chaos Audio
+   app places the binary under that filename; see
+   [Test on hardware](deploy-to-hardware.md).
    If `dsp_version` is exactly `"2.0.0"`, the module-level `setSampleRate(int)`
    export is called once, with `44100`. The library handle is cached forever.
 2. **Every assembly — an instance is fetched from the pool.** Instances are

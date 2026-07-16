@@ -88,7 +88,7 @@ What to notice:
 - The sine-table fill in `instanceConstants()` heap-allocates a small helper object — fine, because `instanceConstants()` runs on the controller thread, never the audio thread ([runtime-environment.md](runtime-environment.md)).
 - *note:* `instanceConstants()` resets `knobs[0..2] = 5.0` — same predates-the-guidelines caveat as equalizer.
 - *note:* pluto exports **only** `create()` — no `dsp_version` symbol. The firmware therefore treats it as a v1 "legacy" effect and calls `compute()` in 16-sample chunks. It still works, but new effects should export `dsp_version` and take the single full-buffer call ([dsp-contract.md](dsp-contract.md)).
-- These two examples were generated with an older FAUST flow and hand-adapted to subclass `resources/dsp.hpp`. The *production* FAUST pipeline (FX-Builder / Tone Shop) uses a different architecture file and different conventions — if you're writing FAUST, follow [guide-faust.md](guide-faust.md), and use pluto only to understand what generated DSP code looks like.
+- These two examples were generated with an older FAUST flow and hand-adapted to subclass `resources/dsp.hpp`. The *production* FAUST pipeline (FX Builder / Tone Shop) uses a different architecture file and different conventions — if you're writing FAUST, follow [guide-faust.md](guide-faust.md), and use pluto only to understand what generated DSP code looks like.
 
 ### 3. `spectrometer` — six-band FAUST EQ (★★☆☆)
 
@@ -118,7 +118,7 @@ Two of its assumptions predate the current guidelines:
 
 - *note:* `samplesPerBlockDefault = 16` ("Most likely won't change") reflects the v1 legacy chunking era — juce_effect exports only `create()`, so the firmware does feed it 16-sample chunks. A modern effect exporting `dsp_version = "2.0.0"` sees one full-buffer call (128 frames in production) and must handle **any** `count` (see [runtime-environment.md](runtime-environment.md)).
 - *note:* `compute()` calls `prepareToPlay(count)` when the block size changes, and `juce::dsp` `prepare()` calls may allocate — that's heap work on the audio thread, which [rt-safety.md](rt-safety.md) forbids. Pre-prepare for your maximum block size in the constructor instead.
-- Its README's deploy instructions (SFTP + `./fw`) are dated; use [deploy-to-hardware.md](deploy-to-hardware.md).
+- Its README's deploy instructions (SFTP + `./fw`) are dated; to run your compiled `.so` on hardware, upload it to the FX Builder and publish privately — see [deploy-to-hardware.md](deploy-to-hardware.md).
 - *note:* JUCE's large translation units are memory-hungry under QEMU emulation — if a Docker build dies with `g++: internal compiler error: Killed (program cc1plus)` or exit code 137, raise Docker Desktop's memory allowance (see the [build-docker.md troubleshooting table](build-docker.md#troubleshooting)).
 
 ## `common/` — shared DSP helpers
