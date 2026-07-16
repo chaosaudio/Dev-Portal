@@ -73,6 +73,12 @@ Dockerfile          The build container (compiles for the device's CPU)
 docs/               The documentation listed above
 ```
 
+## On the roadmap
+
+- **Neural Amp Modeler SDK** — use NAM captures inside your own plugins.
+  Planned, not yet available: see [the roadmap note](docs/roadmap-nam-sdk.md)
+  for the idea, the constraints, and what you can do today.
+
 ## Required hardware
 
 - A [Stratus®](https://chaosaudio.com/products/stratus) pedal **or**
