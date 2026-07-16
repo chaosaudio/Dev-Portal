@@ -19,7 +19,7 @@ file(GLOB EFFECTS_SRC
 )
 
 # Compile Biquad.cpp into an object file
-add_library(Biquad OBJECT ../../common/Biquad.cpp)
+add_library(Biquad OBJECT ${CMAKE_SOURCE_DIR}/common/Biquad.cpp)
 
 # Get all directories in the current directory
 file(GLOB EFFECTS_DIRS LIST_DIRECTORIES true RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*")
@@ -38,6 +38,14 @@ foreach(EFFECT_DIR ${EFFECTS_DIRS})
 
     # Get the filename without extension
     get_filename_component(EFFECT_NAME ${EFFECT_DIR} NAME_WE)
+
+    # Skip directories that don't contain a matching <dir>/<dir>.cpp effect
+    # source (e.g. examples/dsp/ is a header-only library, not an effect) —
+    # otherwise CMake generates a target with a nonexistent source and the
+    # whole configure fails.
+    if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${EFFECT_DIR}/${EFFECT_NAME}.cpp)
+        continue()
+    endif()
 
     # If the current file is Equalizer.cpp, link it with Biquad
     if(EFFECT_NAME STREQUAL "equalizer")

@@ -2,3 +2,8 @@
 build
 bins
 .vscode
+build*/
+bins/
+*.o
+artifacts/
+renders/
