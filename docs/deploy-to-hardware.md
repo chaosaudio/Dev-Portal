@@ -8,12 +8,14 @@ This is the *developer testing* path. Releasing your effect to users goes throug
 
 - A compiled effect binary from the [Docker build](build-docker.md) (in `./bins/` after a build).
 - The Chaos Audio **Beta app** on your phone — join the [Beta Program](https://chaosaudio.com/pages/beta-program) to get it.
-- Your device powered on and on the same network as your computer.
+- Your device powered on and connected to your computer with a USB **data** cable (Stratus and Nimbus have no Wi-Fi — SSH runs over the USB link).
 - The developer password for your device (issued with the developer program — apply via the [Developer Application](https://chaosaudio.com/pages/developer-portal), or ask in the developer Discord / support@chaosaudio.com if you don't have it). This documentation never prints device passwords.
 
 ## Step 1 — Find your device
 
-Your device runs a small Linux system that announces itself on the local network. Try the mDNS hostname first:
+Stratus and Nimbus have **no Wi-Fi** and never join your network. Instead, when you connect the device to your computer with a **USB cable**, it presents a small "USB gadget network" over the cable — a private, two-machine network that exists only between your computer and the device. That link is how all `ssh`/`scp` in these docs work.
+
+Plug the device into your computer over USB (data-capable cable), give it ~30 seconds after power-on, then try the mDNS hostname:
 
 ```bash
 ping -c 2 stratus.local
@@ -26,12 +28,12 @@ PING stratus.local (192.168.1.42): 56 data bytes
 64 bytes from 192.168.1.42: icmp_seq=0 ttl=64 time=4.1 ms
 ```
 
-The same hostname and commands apply on Nimbus. If `stratus.local` does not resolve:
+(The IP you see will be one of the fixed USB-network addresses below.) The same hostname and commands apply on Nimbus. If `stratus.local` does not resolve:
 
-- **Use the IP address from the app.** The Chaos Audio app displays the device's IP address on its device/connection screen; substitute that IP for `stratus.local` in every command on this page.
-- **USB network.** When connected over USB, the device exposes a gadget network interface. It is typically reachable at `192.168.7.2` (some setups use `192.168.6.2`) — try `ssh root@192.168.7.2` first.
+- **Use the fixed USB-network address.** The device always sits at a known address on the USB link: try `ssh root@192.168.7.2` first, then `ssh root@192.168.6.2` (which one is live depends on your OS's USB-networking driver). Substitute whichever answers for `stratus.local` in every command on this page.
+- **Check the cable and the interface.** A charge-only cable presents no network at all. On macOS a new "network interface" appears in System Settings → Network when the link is up; on Linux, `ip addr` shows a new `usb`/`en` interface with a `192.168.6.x` or `192.168.7.x` address.
 
-> **Gotcha:** `stratus.local` relies on mDNS. On Windows, mDNS resolution may need the Bonjour service — and inside WSL2, `.local` names usually do not resolve at all even with Bonjour installed on the Windows host, so Windows users should expect to use the IP address from the app. All commands on this page assume a WSL2 shell on Windows (consistent with [Build with Docker](build-docker.md)); if the name won't resolve anywhere, fall back to the raw IP.
+> **Gotcha:** `stratus.local` relies on mDNS over the USB link. On Windows, mDNS may need the Bonjour service — and inside WSL2, `.local` names usually do not resolve at all even with Bonjour on the Windows host, so Windows users should expect to use the fixed address (`192.168.7.2`) directly. All commands on this page assume a WSL2 shell on Windows (consistent with [Build with Docker](build-docker.md)).
 
 **Checkpoint:** `ping` gets replies from the device (or you have its IP address written down).
 

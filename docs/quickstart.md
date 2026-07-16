@@ -20,7 +20,7 @@ This page takes you from an empty folder to hearing a compiled effect running on
 
 ### Hardware
 
-- [ ] A **Stratus** pedal or **Nimbus** smart amp, powered on and connected to the **same network as your computer** (set up Wi-Fi through the Chaos Audio app if you haven't).
+- [ ] A **Stratus** pedal or **Nimbus** smart amp, powered on and connected to your computer with a **USB cable** (use a data-capable cable, not a charge-only one). The devices have no Wi-Fi — the USB cable *is* the connection: they present a small "USB network" to your computer, which is how `ssh`/`scp` reach them as `stratus.local`.
 - [ ] A guitar (or any instrument) and cables. For Stratus, something downstream to hear yourself — an amp or headphones.
 - [ ] A phone with the **Beta** version of the Chaos Audio app (see Accounts below).
 

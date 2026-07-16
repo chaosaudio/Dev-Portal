@@ -21,7 +21,7 @@ The online FAUST IDE has integrated Stratus support and can produce an installer
 3. Add the `[stratus:N]` metadata to every control you want mapped to a hardware knob or switch. **This applies to the IDE path too**, not just production submission — read the binding rules in Tier 2 below before you export. A control without valid `[stratus:N]` metadata will install fine and then do nothing on the pedal.
 4. Open the IDE's export dialog (the truck icon), and select platform **`chaos-stratus`**, architecture **`effect-installer`**.
 5. Download the generated `.zip`.
-6. With your Stratus (or Nimbus) powered on and on the same network as your computer, follow the tutorial's install steps to run the installer from the zip. It builds and installs the effect into the device's effects directory for you. You will need SSH access to the device: the developer password for your device (issued with the developer program — ask in the developer Discord/support if you don't have it).
+6. With your Stratus (or Nimbus) powered on and connected to your computer with a USB cable (the devices have no Wi-Fi — SSH runs over the USB link; see [deploy-to-hardware.md](deploy-to-hardware.md)), follow the tutorial's install steps to run the installer from the zip. It builds and installs the effect into the device's effects directory for you. You will need SSH access to the device: the developer password for your device (issued with the developer program — ask in the developer Discord/support if you don't have it).
 
 **Checkpoint:** the effect is installed on the device; audition it from the Beta version of the Chaos Audio app (see the "9 KNOB" tester workflow in [deploy-to-hardware.md](deploy-to-hardware.md)). To watch it load, run this on the device:
 

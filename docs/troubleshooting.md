@@ -485,9 +485,9 @@ then connect again and accept the new key.
 
 **Symptom:** `ssh: connect to host stratus.local port 22: Operation timed out` or `Could not resolve hostname stratus.local`.
 
-**Cause:** the device is powered down or idle, on a different network than your computer, or your network blocks mDNS (`.local` resolution) — common on corporate/guest Wi-Fi.
+**Cause:** the device is powered down or still booting, the USB cable is charge-only (no data lines — presents no network at all), your OS hasn't brought up the USB network interface, or mDNS (`.local` resolution) isn't available on your system (typical inside WSL2). Remember: Stratus and Nimbus have no Wi-Fi — the connection is always the USB cable.
 
-**Fix:** power-cycle the device and make some noise through it so it's demonstrably awake; put your computer on the same network segment; if `.local` doesn't resolve, find the device's IP from your router and use it directly in place of `stratus.local`.
+**Fix:** swap in a known-good data cable and reconnect; give the device ~30 s after power-on; confirm a new USB network interface appeared (macOS: System Settings → Network; Linux: `ip addr`); if `.local` doesn't resolve, use the fixed USB-network address directly — `ssh root@192.168.7.2`, then `192.168.6.2` — in place of `stratus.local`.
 
 **How to confirm:**
 
