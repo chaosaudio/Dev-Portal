@@ -9,6 +9,11 @@ compiled `.so` plugin. **Build your effect once and it runs on every Stratus
 and every Nimbus.** Everything in these docs applies to both devices; where
 commands mention `stratus.local`, the same steps work on a Nimbus.
 
+**New here? Watch the 2½-minute intro** — the platform, both development
+paths, and how payouts work:
+
+[![Chaos Audio Stratus & Nimbus Developer Update — 2½-minute video intro](https://cdn.loom.com/sessions/thumbnails/46cf6fb16e2440de8bb0af152aaa308b-fa85aacd91e769df.gif)](https://www.loom.com/share/46cf6fb16e2440de8bb0af152aaa308b)
+
 ## The fastest way: build in your browser
 
 You don't need this repo — or any local tooling — to make an effect. The
