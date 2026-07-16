@@ -185,10 +185,6 @@ These are real shipped-quality effects (GPL-3.0, by Massimo Pennazio / AIDA DSP)
 - `tests/benchmark_plugin.cpp` builds the `benchmark-plugin` harness: it `dlopen`s any effect `.so`, feeds it noise, and reports an x-realtime figure. Full usage, and why QEMU numbers are only relative, in [verification.md](verification.md).
 - `resources/dsp.hpp` — the ABI header ([dsp-contract.md](dsp-contract.md)). `resources/compilation_flags.txt` — the flag list, explained in [build-flags-reference.md](build-flags-reference.md). `resources/ui_assets/` — the artwork templates for Tone Shop listings ([release-and-submission.md](release-and-submission.md)).
 
-## Examples you may hear about that are not in this tree
-
-Some newer examples — a spring reverb, "subspace" (a dynamics/expander effect), a Leslie sim, and a pitch-tracking harmonizer / polyphonic harmonizer — exist on Chaos Audio development branches but have not landed on `main`. If you see them referenced in Discord or commit history, that's what they are; this page will cover them when they merge. Don't go looking for `examples/springreverb` in this checkout — it isn't here yet.
-
 **Checkpoint:** you know which example to open first (`equalizer`), which files are traps (`examples/dsp.hpp`, `examples/README.md`, `pitchshifter.cpp`), and where every submodule is actually consumed.
 
 Next: [release-and-submission.md](release-and-submission.md)

@@ -16,7 +16,7 @@ This is the *developer testing* path. Releasing your effect to users goes throug
 
 ## Step 1 — Upload your binary to the FX Builder
 
-Sign in at [build.chaosaudio.com](https://build.chaosaudio.com), create a new effect, and upload your `.so` (e.g. `./bins/subspace.so` from the Docker build). The upload must be a **32-bit ARM shared object under 5 MB** — anything the provided container produces qualifies.
+Sign in at [build.chaosaudio.com](https://build.chaosaudio.com), create a new effect, and upload your `.so` (e.g. `./bins/equalizer.so` from the Docker build). The upload must be a **32-bit ARM shared object under 5 MB** — anything the provided container produces qualifies.
 
 You never pick an effect ID. The platform assigns your effect's **Effect ID (GUID)** when the effect is created, and names the hosted binary `<EFFECT-ID>.so` itself — see [Release & Submission](release-and-submission.md).
 
