@@ -242,6 +242,28 @@ Export `DSP_VERSION` from the header (which is `"2.0.0"`) and both behaviors are
 
 > **Gotcha:** don't invent version strings. The two rows above are the only supported states: no symbol, or the exact string `"2.0.0"`. Anything else is unsupported — export `dsp_version = DSP_VERSION` verbatim and put your own release number in the `version` member instead.
 
+> **Warning:** the dangerous failure is exporting *neither* on purpose nor by
+> accident. If your build system compiles with hidden symbol visibility
+> (JUCE and many CMake setups default to `-fvisibility=hidden`), your
+> `dsp_version` definition can silently vanish from the dynamic symbol table —
+> and a plugin **built against the current `dsp.hpp`** then gets driven through
+> the legacy v1 interface. On-device symptoms: the effect can't engage, the
+> app's stomp switch flips right back off, or audio is silent/garbled.
+> Mark the entry points with default visibility:
+>
+> ```cpp
+> extern "C" __attribute__((visibility("default"))) dsp* create() { return new MyEffect(); }
+> extern "C" __attribute__((visibility("default"))) const char* dsp_version = DSP_VERSION;
+> ```
+>
+> and verify before uploading — you want `T create` and `D dsp_version`:
+>
+> ```bash
+> nm -D my_effect.so | grep -E ' (create|dsp_version)$'
+> ```
+>
+> The FX Builder warns at upload when either symbol is missing.
+
 Either way, **never assume a fixed block size**. `count` is usually 128 in production, but your `compute()` must be correct for any value from 1 to 1024: legacy chunking uses 16, other hosts and modes vary, and `benchmark()` passes enormous counts. If your algorithm needs fixed-size frames internally, chunk `count` yourself — never write `count` samples into a fixed-size stack array.
 
 ---
