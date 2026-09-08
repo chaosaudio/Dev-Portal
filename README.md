@@ -131,6 +131,9 @@ distribution on Tone Shop™:
   examples (sign-in required).
 - **[DMCA Policy](https://build.chaosaudio.com/dmca)** — how copyright
   complaints are handled.
+- **[Bela library replacement (LGPL v3.0)](docs/bela-lgpl.md)** — how
+  Stratus customers can access and replace the Bela library installed on
+  their device.
 
 Pricing is self-serve in the FX Builder (free, or US$0.99–$49.99), and your
 revenue share pays out via Stripe — details in
